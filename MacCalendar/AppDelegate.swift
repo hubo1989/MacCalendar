@@ -69,7 +69,9 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
         
         if event.type == .rightMouseUp {
             let menu = NSMenu()
-            menu.addItem(NSMenuItem(title: "设置", action: #selector(showSettingsWindow), keyEquivalent: ","))
+            let settingsItem = NSMenuItem(title: "偏好设置...", action: #selector(showSettingsWindow), keyEquivalent: ",")
+            settingsItem.image = NSImage(systemSymbolName: "gear", accessibilityDescription: nil)
+            menu.addItem(settingsItem)
             menu.addItem(NSMenuItem.separator())
             menu.addItem(NSMenuItem(title: "退出", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
             
