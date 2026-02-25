@@ -71,7 +71,7 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
             let menu = NSMenu()
             menu.addItem(NSMenuItem(title: "设置", action: #selector(showSettingsWindow), keyEquivalent: ","))
             menu.addItem(NSMenuItem.separator())
-            menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+            menu.addItem(NSMenuItem(title: "退出", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
             
             statusItem.menu = menu
             statusItem.button?.performClick(nil)
