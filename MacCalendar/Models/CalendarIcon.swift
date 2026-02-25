@@ -148,7 +148,7 @@ class CalendarIcon: ObservableObject {
     private func updateDisplayOutput() {
         dateFormatter.calendar = Calendar.autoupdatingCurrent
         dateFormatter.locale = Locale.autoupdatingCurrent
-        
+
         switch SettingsManager.displayMode {
         case .icon:
             displayOutput = ""
@@ -159,17 +159,52 @@ class CalendarIcon: ObservableObject {
             dateFormatter.dateFormat = "HH:mm:ss"
             displayOutput = dateFormatter.string(from: Date())
         case .custom:
-            dateFormatter.dateFormat = SettingsManager.customFormatString
-            
-            if SettingsManager.customFormatString.contains("w") {
+            var format = SettingsManager.customFormatString
+            let hasLunarYear = format.contains("{GY}")
+            let hasLunarMonth = format.contains("{GM}")
+            let hasLunarDay = format.contains("{LD}")
+
+            // 使用纯占位符替换农历变量，避免 DateFormatter 解析任何字符
+            // 使用 ' 作为引用字面量，把花括号内的内容包起来
+            let placeholderGY = "'GY_PLACEHOLDER'"
+            let placeholderGM = "'GM_PLACEHOLDER'"
+            let placeholderLD = "'LD_PLACEHOLDER'"
+
+            format = format
+                .replacingOccurrences(of: "{GY}", with: placeholderGY)
+                .replacingOccurrences(of: "{GM}", with: placeholderGM)
+                .replacingOccurrences(of: "{LD}", with: placeholderLD)
+
+            dateFormatter.dateFormat = format
+
+            if format.contains("w") {
                 var calendar = Calendar(identifier: .iso8601)
                 // ISO 8601 标准：周一为第一天，第一周至少4天
                 calendar.firstWeekday = 2 // 2 代表周一
                 calendar.minimumDaysInFirstWeek = 4
                 dateFormatter.calendar = calendar
             }
-            
-            displayOutput = dateFormatter.string(from: Date())
+
+            var result = dateFormatter.string(from: Date())
+
+            // 替换农历变量占位符
+            if hasLunarYear || hasLunarMonth || hasLunarDay {
+                let ganzhiYear = LunarDateHelper.getGanzhiYear(for: Date())
+                let ganzhiMonth = LunarDateHelper.getGanzhiMonth(for: Date())
+                let lunarDay = LunarDateHelper.getLunarDay(for: Date())
+
+                if hasLunarYear {
+                    result = result.replacingOccurrences(of: "GY_PLACEHOLDER", with: ganzhiYear)
+                }
+                if hasLunarMonth {
+                    result = result.replacingOccurrences(of: "GM_PLACEHOLDER", with: ganzhiMonth)
+                }
+                if hasLunarDay {
+                    result = result.replacingOccurrences(of: "LD_PLACEHOLDER", with: lunarDay)
+                }
+            }
+
+            displayOutput = result
         }
     }
 }

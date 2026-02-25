@@ -31,12 +31,12 @@ extension Bundle {
     }
 }
 
-extension Color: Codable {
+extension Color {
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0
         Scanner(string: hex).scanHexInt64(&int)
-        
+
         let a, r, g, b: UInt64
         switch hex.count {
         case 3: // RGB (12-bit)
@@ -48,7 +48,7 @@ extension Color: Codable {
         default:
             (a, r, g, b) = (255, 0, 0, 0) // Default to black
         }
-        
+
         self.init(
             .sRGB,
             red: Double(r) / 255,
@@ -56,40 +56,5 @@ extension Color: Codable {
             blue: Double(b) / 255,
             opacity: Double(a) / 255
         )
-    }
-    // 定义用于存储颜色 RGBA 分量的结构体
-    struct CodableColor: Codable {
-        let red: Double
-        let green: Double
-        let blue: Double
-        let opacity: Double
-    }
-
-    // `encode(to:)` 方法：将 Color 编码成 CodableColor
-    public func encode(to encoder: Encoder) throws {
-        // 使用 UIColor 来获取 RGBA 组件
-        // 注意：这需要 UIKit 或 AppKit
-        #if canImport(UIKit)
-        let uiColor = UIColor(self)
-        #elseif canImport(AppKit)
-        let uiColor = NSColor(self)
-        #endif
-        
-        var r: CGFloat = 0
-        var g: CGFloat = 0
-        var b: CGFloat = 0
-        var a: CGFloat = 0
-        uiColor.getRed(&r, green: &g, blue: &b, alpha: &a)
-
-        let codableColor = CodableColor(red: Double(r), green: Double(g), blue: Double(b), opacity: Double(a))
-        var container = encoder.singleValueContainer()
-        try container.encode(codableColor)
-    }
-
-    // `init(from:)` 初始化器：从 CodableColor 解码成 Color
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let codableColor = try container.decode(CodableColor.self)
-        self.init(red: codableColor.red, green: codableColor.green, blue: codableColor.blue, opacity: codableColor.opacity)
     }
 }
