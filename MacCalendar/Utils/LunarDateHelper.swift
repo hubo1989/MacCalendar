@@ -13,6 +13,7 @@ struct LunarDateHelper {
     static let heavenlyStems = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
     static let zodiacSymbols = ["鼠", "牛", "虎", "兔", "龍", "蛇", "馬", "羊", "猴", "雞", "狗", "豬"]
     static let lunarDaySymbols = ["初一","初二","初三","初四","初五","初六","初七","初八","初九","初十", "十一","十二","十三","十四","十五","十六","十七","十八","十九","二十", "廿一","廿二","廿三","廿四","廿五","廿六","廿七","廿八","廿九","三十"]
+    static let lunarMonthNames = ["正月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "冬月", "腊月"]
 
     private static let yearFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -62,6 +63,18 @@ struct LunarDateHelper {
         let lunarDay = chineseCalendar.component(.day, from: date)
         guard lunarDay >= 1 && lunarDay <= 30 else { return "" }
         return lunarDaySymbols[lunarDay - 1]
+    }
+
+    /**
+     根据公历日期，获取农历月份名称
+     - Parameter date: 公历日期
+     - Returns: 农历月份名称，例如 "正月"、"冬月"、"腊月"
+     */
+    static func getLunarMonthName(for date: Date) -> String {
+        let chineseCalendar = Calendar(identifier: .chinese)
+        let month = chineseCalendar.component(.month, from: date)
+        guard month >= 1 && month <= 12 else { return "" }
+        return lunarMonthNames[month - 1]
     }
 
     /**
