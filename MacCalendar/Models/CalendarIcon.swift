@@ -160,20 +160,30 @@ class CalendarIcon: ObservableObject {
             displayOutput = dateFormatter.string(from: Date())
         case .custom:
             var format = SettingsManager.customFormatString
-            let hasLunarYear = format.contains("{GY}")
-            let hasLunarMonth = format.contains("{GM}")
-            let hasLunarDay = format.contains("{LD}")
 
-            // 使用纯占位符替换农历变量，避免 DateFormatter 解析任何字符
-            // 使用 ' 作为引用字面量，把花括号内的内容包起来
-            let placeholderGY = "'GY_PLACEHOLDER'"
-            let placeholderGM = "'GM_PLACEHOLDER'"
-            let placeholderLD = "'LD_PLACEHOLDER'"
+            // 检测农历变量（支持带花括号和不带花括号两种格式）
+            // 使用唯一标记避免重复检测
+            let hasLunarYear = format.contains("{GY}") || format.range(of: #"GY[^A-Za-z_]|GY$"#, options: .regularExpression) != nil
+            let hasLunarMonth = format.contains("{GM}") || format.range(of: #"GM[^A-Za-z_]|GM$"#, options: .regularExpression) != nil
+            let hasLunarDay = format.contains("{LD}") || format.range(of: #"LD[^A-Za-z_]|LD$"#, options: .regularExpression) != nil
+            let hasLunarMonthName = format.contains("{LM}") || format.range(of: #"LM[^A-Za-z_]|LM$"#, options: .regularExpression) != nil
 
+            // 使用唯一占位符替换农历变量，避免 DateFormatter 解析和相互冲突
+            let placeholderGY = "'__LUNAR_GY__'"
+            let placeholderGM = "'__LUNAR_GM__'"
+            let placeholderLD = "'__LUNAR_LD__'"
+            let placeholderLM = "'__LUNAR_LM__'"
+
+            // 先替换带花括号的，再替换不带花括号的（使用正则确保完整匹配）
             format = format
                 .replacingOccurrences(of: "{GY}", with: placeholderGY)
                 .replacingOccurrences(of: "{GM}", with: placeholderGM)
                 .replacingOccurrences(of: "{LD}", with: placeholderLD)
+                .replacingOccurrences(of: "{LM}", with: placeholderLM)
+                .replacingOccurrences(of: #"GY([^A-Za-z_]|$)"#, with: "\(placeholderGY)$1", options: .regularExpression)
+                .replacingOccurrences(of: #"GM([^A-Za-z_]|$)"#, with: "\(placeholderGM)$1", options: .regularExpression)
+                .replacingOccurrences(of: #"LD([^A-Za-z_]|$)"#, with: "\(placeholderLD)$1", options: .regularExpression)
+                .replacingOccurrences(of: #"LM([^A-Za-z_]|$)"#, with: "\(placeholderLM)$1", options: .regularExpression)
 
             dateFormatter.dateFormat = format
 
@@ -188,19 +198,23 @@ class CalendarIcon: ObservableObject {
             var result = dateFormatter.string(from: Date())
 
             // 替换农历变量占位符
-            if hasLunarYear || hasLunarMonth || hasLunarDay {
+            if hasLunarYear || hasLunarMonth || hasLunarDay || hasLunarMonthName {
                 let ganzhiYear = LunarDateHelper.getGanzhiYear(for: Date())
                 let ganzhiMonth = LunarDateHelper.getGanzhiMonth(for: Date())
                 let lunarDay = LunarDateHelper.getLunarDay(for: Date())
+                let lunarMonthName = LunarDateHelper.getLunarMonthName(for: Date())
 
                 if hasLunarYear {
-                    result = result.replacingOccurrences(of: "GY_PLACEHOLDER", with: ganzhiYear)
+                    result = result.replacingOccurrences(of: "__LUNAR_GY__", with: ganzhiYear)
                 }
                 if hasLunarMonth {
-                    result = result.replacingOccurrences(of: "GM_PLACEHOLDER", with: ganzhiMonth)
+                    result = result.replacingOccurrences(of: "__LUNAR_GM__", with: ganzhiMonth)
                 }
                 if hasLunarDay {
-                    result = result.replacingOccurrences(of: "LD_PLACEHOLDER", with: lunarDay)
+                    result = result.replacingOccurrences(of: "__LUNAR_LD__", with: lunarDay)
+                }
+                if hasLunarMonthName {
+                    result = result.replacingOccurrences(of: "__LUNAR_LM__", with: lunarMonthName)
                 }
             }
 
