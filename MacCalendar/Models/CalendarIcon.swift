@@ -162,11 +162,11 @@ class CalendarIcon: ObservableObject {
             var format = SettingsManager.customFormatString
 
             // 检测农历变量（支持带花括号和不带花括号两种格式）
-            // 使用唯一标记避免重复检测
-            let hasLunarYear = format.contains("{GY}") || format.range(of: #"GY[^A-Za-z_]|GY$"#, options: .regularExpression) != nil
-            let hasLunarMonth = format.contains("{GM}") || format.range(of: #"GM[^A-Za-z_]|GM$"#, options: .regularExpression) != nil
-            let hasLunarDay = format.contains("{LD}") || format.range(of: #"LD[^A-Za-z_]|LD$"#, options: .regularExpression) != nil
-            let hasLunarMonthName = format.contains("{LM}") || format.range(of: #"LM[^A-Za-z_]|LM$"#, options: .regularExpression) != nil
+            // 使用负向前顾和负向后顾确保只匹配独立标识符
+            let hasLunarYear = format.contains("{GY}") || format.range(of: #"(?<![A-Za-z_])GY(?![A-Za-z_])"#, options: .regularExpression) != nil
+            let hasLunarMonth = format.contains("{GM}") || format.range(of: #"(?<![A-Za-z_])GM(?![A-Za-z_])"#, options: .regularExpression) != nil
+            let hasLunarDay = format.contains("{LD}") || format.range(of: #"(?<![A-Za-z_])LD(?![A-Za-z_])"#, options: .regularExpression) != nil
+            let hasLunarMonthName = format.contains("{LM}") || format.range(of: #"(?<![A-Za-z_])LM(?![A-Za-z_])"#, options: .regularExpression) != nil
 
             // 使用唯一占位符替换农历变量，避免 DateFormatter 解析和相互冲突
             let placeholderGY = "'__LUNAR_GY__'"
@@ -180,10 +180,10 @@ class CalendarIcon: ObservableObject {
                 .replacingOccurrences(of: "{GM}", with: placeholderGM)
                 .replacingOccurrences(of: "{LD}", with: placeholderLD)
                 .replacingOccurrences(of: "{LM}", with: placeholderLM)
-                .replacingOccurrences(of: #"GY([^A-Za-z_]|$)"#, with: "\(placeholderGY)$1", options: .regularExpression)
-                .replacingOccurrences(of: #"GM([^A-Za-z_]|$)"#, with: "\(placeholderGM)$1", options: .regularExpression)
-                .replacingOccurrences(of: #"LD([^A-Za-z_]|$)"#, with: "\(placeholderLD)$1", options: .regularExpression)
-                .replacingOccurrences(of: #"LM([^A-Za-z_]|$)"#, with: "\(placeholderLM)$1", options: .regularExpression)
+                .replacingOccurrences(of: #"(?<![A-Za-z_])GY(?![A-Za-z_])"#, with: placeholderGY, options: .regularExpression)
+                .replacingOccurrences(of: #"(?<![A-Za-z_])GM(?![A-Za-z_])"#, with: placeholderGM, options: .regularExpression)
+                .replacingOccurrences(of: #"(?<![A-Za-z_])LD(?![A-Za-z_])"#, with: placeholderLD, options: .regularExpression)
+                .replacingOccurrences(of: #"(?<![A-Za-z_])LM(?![A-Za-z_])"#, with: placeholderLM, options: .regularExpression)
 
             dateFormatter.dateFormat = format
 
