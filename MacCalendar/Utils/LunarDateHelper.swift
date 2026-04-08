@@ -68,13 +68,18 @@ struct LunarDateHelper {
     /**
      根据公历日期，获取农历月份名称
      - Parameter date: 公历日期
-     - Returns: 农历月份名称，例如 "正月"、"冬月"、"腊月"
+     - Returns: 农历月份名称，例如 "正月"、"冬月"、"腊月"，闰月前加"闰"如 "闰四月"
      */
     static func getLunarMonthName(for date: Date) -> String {
         let chineseCalendar = Calendar(identifier: .chinese)
-        let month = chineseCalendar.component(.month, from: date)
-        guard month >= 1 && month <= 12 else { return "" }
-        return lunarMonthNames[month - 1]
+        let components = chineseCalendar.dateComponents([.month, .isLeapMonth], from: date)
+        guard let month = components.month, month >= 1 && month <= 12 else { return "" }
+        let baseName = lunarMonthNames[month - 1]
+        // 如果是闰月，添加"闰"前缀
+        if components.isLeapMonth == true {
+            return "闰" + baseName
+        }
+        return baseName
     }
 
     /**
