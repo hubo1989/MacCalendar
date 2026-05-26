@@ -164,47 +164,57 @@ class CalendarIcon: ObservableObject {
             let hasLunarMonth = format.contains("{GM}")
             let hasLunarDay = format.contains("{LD}")
 
-            // 使用纯占位符替换农历变量，避免 DateFormatter 解析任何字符
-            // 使用 ' 作为引用字面量，把花括号内的内容包起来
-            let placeholderGY = "'GY_PLACEHOLDER'"
-            let placeholderGM = "'GM_PLACEHOLDER'"
-            let placeholderLD = "'LD_PLACEHOLDER'"
-
-            format = format
-                .replacingOccurrences(of: "{GY}", with: placeholderGY)
-                .replacingOccurrences(of: "{GM}", with: placeholderGM)
-                .replacingOccurrences(of: "{LD}", with: placeholderLD)
-
-            dateFormatter.dateFormat = format
-
-            if format.contains("w") {
-                var calendar = Calendar(identifier: .iso8601)
-                // ISO 8601 标准：周一为第一天，第一周至少4天
-                calendar.firstWeekday = 2 // 2 代表周一
-                calendar.minimumDaysInFirstWeek = 4
-                dateFormatter.calendar = calendar
-            }
-
-            var result = dateFormatter.string(from: Date())
-
-            // 替换农历变量占位符
             if hasLunarYear || hasLunarMonth || hasLunarDay {
+                // 使用特殊 Unicode 字符作为占位符，避免 DateFormatter 干扰
+                // 这些字符不会被 DateFormatter 解析或修改
+                let placeholderGY = "\u{00A0}"  // 不间断空格 (No-break space)
+                let placeholderGM = "\u{200B}"  // 零宽空间 (Zero-width space)
+                let placeholderLD = "\u{200C}"  // 零宽非连接符 (Zero-width non-joiner)
+
+                format = format
+                    .replacingOccurrences(of: "{GY}", with: placeholderGY)
+                    .replacingOccurrences(of: "{GM}", with: placeholderGM)
+                    .replacingOccurrences(of: "{LD}", with: placeholderLD)
+
+                dateFormatter.dateFormat = format
+
+                if format.contains("w") {
+                    var calendar = Calendar(identifier: .iso8601)
+                    calendar.firstWeekday = 2
+                    calendar.minimumDaysInFirstWeek = 4
+                    dateFormatter.calendar = calendar
+                }
+
+                var result = dateFormatter.string(from: Date())
+
+                // 替换农历变量占位符为实际值
                 let ganzhiYear = LunarDateHelper.getGanzhiYear(for: Date())
                 let ganzhiMonth = LunarDateHelper.getGanzhiMonth(for: Date())
                 let lunarDay = LunarDateHelper.getLunarDay(for: Date())
 
                 if hasLunarYear {
-                    result = result.replacingOccurrences(of: "GY_PLACEHOLDER", with: ganzhiYear)
+                    result = result.replacingOccurrences(of: placeholderGY, with: ganzhiYear)
                 }
                 if hasLunarMonth {
-                    result = result.replacingOccurrences(of: "GM_PLACEHOLDER", with: ganzhiMonth)
+                    result = result.replacingOccurrences(of: placeholderGM, with: ganzhiMonth)
                 }
                 if hasLunarDay {
-                    result = result.replacingOccurrences(of: "LD_PLACEHOLDER", with: lunarDay)
+                    result = result.replacingOccurrences(of: placeholderLD, with: lunarDay)
                 }
-            }
 
-            displayOutput = result
+                displayOutput = result
+            } else {
+                dateFormatter.dateFormat = format
+                
+                if format.contains("w") {
+                    var calendar = Calendar(identifier: .iso8601)
+                    calendar.firstWeekday = 2
+                    calendar.minimumDaysInFirstWeek = 4
+                    dateFormatter.calendar = calendar
+                }
+                
+                displayOutput = dateFormatter.string(from: Date())
+            }
         }
     }
 }
